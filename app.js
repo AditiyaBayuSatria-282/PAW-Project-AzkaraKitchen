@@ -16,6 +16,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(logger);
 app.use(express.static('public'));
 
+// === TAMBAHKAN DUA BARIS INI (Wajib untuk CRUD Frontend) ===
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Routes
 app.use('/api', apiRoutes);
 app.use('/', webRoutes);
@@ -24,4 +28,3 @@ app.use('/', webRoutes);
 app.listen(PORT, () => {
     console.log(`Azkara Kitchen Server running on http://localhost:${PORT}`);
 });
-

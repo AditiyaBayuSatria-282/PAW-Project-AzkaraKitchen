@@ -1,36 +1,40 @@
-const products = [
-    { 
-        id: 1, 
-        nama: 'Es Lumut', 
-        harga: 6000, 
-        kategori: 'Minuman',
-        gambar: '/image/download.webp'
-    },
-    { 
-        id: 2, 
-        nama: 'Bolu', 
-        harga: 5000, 
-        kategori: 'Makanan Utama',
-        gambar: 'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?w=500&q=80'
-    },
-    { 
-        id: 3, 
-        nama: 'Es Lilin', 
-        harga: 2000, 
-        kategori: 'Minuman',
-        gambar: 'https://images.unsplash.com/photo-1499638673689-79a0b5115d87?w=500&q=80'
-    },
-    { 
-        id: 4, 
-        nama: 'Martabak Asin', 
-        harga: 15000, 
-        kategori: 'Makanan Utama',
-        gambar: 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=500&q=80'
-    }
-];
+const db = require('../config/database');
 
-const getAllProducts = () => {
-    return products;
+const getAllProducts = async () => {
+    // Mengambil semua data dari tabel products
+    const result = await db.query('SELECT * FROM products');
+    return result.rows; 
 };
 
-module.exports = { getAllProducts };
+const getProductById = async (id) => {
+    // Mengambil satu data spesifik berdasarkan ID
+    const result = await db.query('SELECT * FROM products WHERE id = $1', [id]);
+    return result.rows[0];
+};
+
+const createProduct = async (data) => {
+    // Menambahkan data baru dan mengembalikan ID yang baru dibuat
+    const result = await db.query(
+        'INSERT INTO products (nama, harga, kategori, gambar) VALUES ($1, $2, $3, $4) RETURNING id',
+        [data.nama, data.harga, data.kategori, data.gambar]
+    );
+    return result.rows[0].id;
+};
+
+const updateProduct = async (id, data) => {
+    // Mengubah data yang sudah ada
+    const result = await db.query(
+        'UPDATE products SET nama=$1, harga=$2, kategori=$3, gambar=$4 WHERE id=$5',
+        [data.nama, data.harga, data.kategori, data.gambar, id]
+    );
+    return result.rowCount; 
+};
+
+const deleteProduct = async (id) => {
+    // Menghapus data dari tabel
+    const result = await db.query('DELETE FROM products WHERE id=$1', [id]);
+    return result.rowCount;
+};
+
+// Mengekspor semua fungsi agar bisa dipakai di Controller
+module.exports = { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct };
