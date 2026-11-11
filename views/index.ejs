@@ -4,39 +4,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <!-- Menggunakan Tailwind CSS dari CDN sesuai ketentuan -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans p-8">
-    <div class="max-w-5xl mx-auto">
-        <h1 class="text-4xl font-extrabold text-center text-orange-600 mb-10"><%= title %></h1>
-        
-        <!-- Grid UI Baru -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+<body class="bg-gray-50 min-h-screen p-6">
+
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-center text-orange-600 mb-8">Katalog Menu - Azkara Kitchen</h1>
+
+        <!-- BAGIAN 1: LIST PRODUK (CARD) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-12" id="product-list">
             <% products.forEach(product => { %>
-                <!-- Card Container -->
-                <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden p-4 flex flex-col justify-between">
+                    <div>
+                        <img src="<%= product.gambar %>" alt="<%= product.nama %>" class="w-full h-40 object-cover rounded-md mb-4">
+                        <span class="text-xs font-semibold text-orange-500 uppercase"><%= product.kategori %></span>
+                        <h3 class="text-lg font-bold text-gray-800"><%= product.nama %></h3>
+                        <p class="text-gray-600 font-semibold mt-1">Rp <%= product.harga.toLocaleString('id-ID') %></p>
+                    </div>
                     
-                    <!-- Area Gambar -->
-                    <img src="<%= product.gambar %>" alt="<%= product.nama %>" class="w-full h-48 object-cover">
-                    
-                    <!-- Area Teks -->
-                    <div class="p-5 flex flex-col flex-grow">
-                        <span class="text-xs font-bold uppercase tracking-wider text-orange-500 mb-2"><%= product.kategori %></span>
-                        <h2 class="text-lg font-bold text-gray-800 mb-2 leading-tight"><%= product.nama %></h2>
-                        
-                        <!-- Mengisi ruang kosong agar harga selalu di bawah -->
-                        <div class="flex-grow"></div> 
-                        
-                        <p class="text-xl font-extrabold text-green-600 mt-4">Rp <%= product.harga.toLocaleString('id-ID') %></p>
-                        
-                        <!-- Tambahan Tombol Pesan (UI Opsional) -->
-                        <button class="mt-4 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors">
-                            Pesan
-                        </button>
+                    <!-- Tombol Aksi (Pesan, Edit, Hapus) -->
+                    <div class="mt-4 flex flex-col gap-2">
+                        <button onclick="pesanWhatsApp('<%= product.nama %>')" class="w-full bg-orange-500 text-white py-2 rounded-lg font-medium hover:bg-orange-600 transition">Pesan</button>
+                        <div class="flex gap-2">
+                            <button onclick="editProduct('<%= product.id %>', '<%= product.nama %>', '<%= product.harga %>', '<%= product.kategori %>', '<%= product.gambar %>')" class="w-1/2 bg-yellow-500 text-white py-1 rounded-md text-sm hover:bg-yellow-600 transition">Edit</button>
+                            <button onclick="deleteProduct('<%= product.id %>')" class="w-1/2 bg-red-500 text-white py-1 rounded-md text-sm hover:bg-red-600 transition">Hapus</button>
+                        </div>
                     </div>
                 </div>
             <% }) %>
         </div>
+
+        <!-- BAGIAN 2: FORM TAMBAH / EDIT PRODUK -->
+        <div class="bg-white p-6 rounded-xl shadow-md max-w-xl mx-auto">
+            <h2 id="form-title" class="text-xl font-bold text-gray-800 mb-4">Tambah Menu Baru</h2>
+            <form id="product-form" class="space-y-4">
+                <input type="hidden" id="product-id">
+                
+                <!-- Input Gambar disembunyikan agar otomatis pakai gambar default -->
+                <input type="hidden" id="gambar" value="/image/download.webp">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nama Menu</label>
+                    <input type="text" id="nama" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Harga (Rp)</label>
+                    <input type="number" id="harga" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Kategori</label>
+                    <input type="text" id="kategori" required class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500">
+                </div>
+                
+                <div class="flex gap-2">
+                    <button type="submit" id="submit-btn" class="flex-1 bg-green-600 text-white py-2 rounded-md font-semibold hover:bg-green-700 transition">Simpan Menu</button>
+                    <button type="button" onclick="resetForm()" class="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition">Batal</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <!-- SCRIPT FETCH API UNTUK CRUD FRONTEND -->
+    <script>
+        const form = document.getElementById('product-form');
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const productIdInput = document.getElementById('product-id');
+
+        // Handle Submit (Create atau Update)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = productIdInput.value;
+            const data = {
+                nama: document.getElementById('nama').value,
+                harga: Number(document.getElementById('harga').value),
+                kategori: document.getElementById('kategori').value,
+                gambar: document.getElementById('gambar').value
+            };
+
+            try {
+                let response;
+                if (id) {
+                    // Update (PUT)
+                    response = await fetch(`/api/produk/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Create (POST)
+                    response = await fetch('/api/produk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                if (response.ok) {
+                    location.reload(); 
+                } else {
+                    alert('Gagal menyimpan data.');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+            }
+        });
+
+        // Fungsi Tombol Edit
+        function editProduct(id, nama, harga, kategori, gambar) {
+            productIdInput.value = id;
+            document.getElementById('nama').value = nama;
+            document.getElementById('harga').value = harga;
+            document.getElementById('kategori').value = kategori;
+            document.getElementById('gambar').value = gambar;
+
+            formTitle.innerText = "Edit Menu";
+            submitBtn.innerText = "Perbarui Menu";
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        // Fungsi Tombol Hapus (DELETE)
+        async function deleteProduct(id) {
+            if (confirm('Apakah kamu yakin ingin menghapus menu ini dari database?')) {
+                try {
+                    const response = await fetch(`/api/produk/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Gagal menghapus data.');
+                    }
+                } catch (err) {
+                    console.error('Error:', err);
+                }
+            }
+        }
+
+        // Reset Form
+        function resetForm() {
+            productIdInput.value = '';
+            form.reset();
+            document.getElementById('gambar').value = "/image/download.webp";
+            formTitle.innerText = "Tambah Menu Baru";
+            submitBtn.innerText = "Simpan Menu";
+        }
+
+        function pesanWhatsApp(namaMenu) {
+            alert(`Pesanan untuk ${namaMenu} akan diarahkan ke WhatsApp.`);
+        }
+    </script>
 </body>
 </html>
