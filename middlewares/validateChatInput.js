@@ -10,8 +10,8 @@ const INJECTION_PATTERNS = [
     /(instruksi|prompt)\s+sistem/i,
     /(kamu|anda)\s+sekarang\s+(adalah|jadi|menjadi)/i,
     /you\s+are\s+now/i,
-    /act\s+as|berperan\s+sebagai|pura-pura\s+jadi/i,
-    /jailbreak|developer\s+mode|\bDAN\b/i,
+    /\bact\s+as\b|berperan\s+sebagai|pura-pura\s+jadi/i,
+    /jailbreak|developer\s+mode/i,
     /tampilkan\s+(semua\s+)?(instruksi|prompt|aturan)/i,
     /reveal\s+(your\s+)?(prompt|instructions)/i
 ];
