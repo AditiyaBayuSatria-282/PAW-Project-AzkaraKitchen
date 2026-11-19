@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const logger = require('./middlewares/logger');
 
 const apiRoutes = require('./routes/apiRoutes');
+const chatRoutes = require('./routes/chat.routes');
 const webRoutes = require('./routes/webRoutes');
 
 const app = express();
@@ -15,13 +17,12 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware
 app.use(logger);
 app.use(express.static('public'));
-
-// === TAMBAHKAN DUA BARIS INI (Wajib untuk CRUD Frontend) ===
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api', apiRoutes);
+app.use('/api', chatRoutes);
 app.use('/', webRoutes);
 
 // Jalankan Server
