@@ -25,7 +25,11 @@ app.use('/api', apiRoutes);
 app.use('/api', chatRoutes);
 app.use('/', webRoutes);
 
-// Jalankan Server
-app.listen(PORT, () => {
-    console.log(`Azkara Kitchen Server running on http://localhost:${PORT}`);
-});
+// Jalankan Server hanya jika dijalankan langsung (bukan saat di-import oleh test)
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Azkara Kitchen Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
